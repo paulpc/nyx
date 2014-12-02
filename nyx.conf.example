@@ -1,0 +1,25 @@
+[crits]
+url = [CRITs API url]
+username = [CRITs usename]
+api_key = [CRITs API key]
+offset = [query page size]
+
+[qradar]
+api_key = [generated QRadar API key]
+console = [console address]
+high_reference_sets = {"A": "Intel.High.Domains", "Address - ipv4-addr": "Intel.High.IPs", "email": "Intel.High.Emails", "md5": "Intel.High.Hashes"}
+medium_reference_sets = {"A": "Intel.Medium.Domains", "Address - ipv4-addr": "Intel.Medium.IPs", "email": "Intel.Medium.Emails", "md5": "Intel.Medium.Hashes"}
+sets_to_validate = {"Intel.High.Domains": "ALNIC", "Intel.Medium.Domains": "ALNIC", "Intel.High.Hashes": "ALNIC", "Intel.High.IPs": "IP", "Intel.Medium.Emails": "ALNIC", "Intel.Medium.Hashes": "ALNIC", "Intel.High.Emails": "ALNIC", "Intel.Medium.IPs": "IP"}
+
+[palo_alto]
+api_key = [Palo Alto API key]
+url = [Palo Alto base URL]
+block_list = [Custom URL category created for blocking]
+alert_list = [custom URL category created for alerting]
+
+[bro]
+filename = [file_path]
+indicator_map = {"A": "Intel::DOMAIN", "Address - ipv4-addr": "Intel::ADDR", "filename": "Intel::FILE_NAME", "email": "Intel::EMAIL", "md5": "Intel::FILE_HASH"}
+
+[web_proxy]
+filename = [file_path] 
