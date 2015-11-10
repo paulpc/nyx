@@ -1,0 +1,4 @@
+Nyx
+libtaxii>=1.1.107
+stix>=1.2.0.1.dev1
+requests>=2.4.3

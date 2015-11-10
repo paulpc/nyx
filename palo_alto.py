@@ -42,6 +42,19 @@ def add_site_to_pan(site,settings,pan_list):
     r=requests.get(url,verify=False)
     return r
 
+def add_site_to_panorama(site,settings,pan_list):
+    """ adds a url to Palo Alto custom URL list"""
+    url=settings['url']+'?type=config&action=set&key='+settings['api_key']+"&xpath=/config/devices/entry[@name='localhost.localdomain']/vsys/entry[@name='vsys1']/profiles/custom-url-category/entry[@name=%27"+pan_list+'%27]/list&element=<member>'+site+'</member>'
+    r=requests.get(url,verify=False)
+    return r
+
+def check_url(site,settings):
+    # key may vary depending on the system you're connecting to (see note above)
+    url = settings['url']+'?type=op&key='+settings['api_key']+'&cmd=<test><url>'+site+'</url></test>'
+    r = requests.get(url, verify=False)
+    return r.text
+
+
 def pan_commit(settings):
     """Once we are happy with the settings, we will commit them to PAN
     partial commits are not as effective as hoped

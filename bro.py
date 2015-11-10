@@ -14,26 +14,30 @@ def alert_bro(indicator, settings):
     """
     # for now, we're mapping really basic elements:
     indicator_map=settings['indicator_map']
-    with open(settings['filename'],'a+') as bro_file:
-        if 'type' in indicator.keys() and indicator['type']=='Address - ipv4-addr':
-            # adding an ip
+    
+    if 'type' in indicator.keys() and indicator['type']=='Address - ipv4-addr':
+        # adding an ip
+        with open(settings['filename']+'_addr.txt','a+') as bro_file:
             bro_file.write('\t'.join([indicator['ip'],indicator_map[indicator['type']],get_sources(indicator),'T'])+'\n')
-            return True
-        elif 'type' in indicator.keys() and indicator['type']=='A':
-            # adding the domain
+        return True
+    elif 'type' in indicator.keys() and indicator['type']=='A':
+        # adding the domain
+        with open(settings['filename']+'_dom.txt','a+') as bro_file:
             bro_file.write('\t'.join([indicator['domain'],indicator_map[indicator['type']],get_sources(indicator),'T'])+'\n')
-            return True
-        elif 'md5' in indicator.keys():
-            # adding the md5 hash and the filename
+        return True
+    elif 'md5' in indicator.keys():
+        # adding the md5 hash and the filename
+        with open(settings['filename']+'_file.txt','a+') as bro_file:
             if indicator['md5']:
                 bro_file.write('\t'.join([indicator['md5'],indicator_map['md5'],get_sources(indicator),'T'])+'\n')
             if indicator['filename']:
                 bro_file.write('\t'.join([indicator['filename'],indicator_map['filename'],get_sources(indicator),'T'])+'\n')
-            return True
-        elif 'x_mailer' in indicator.keys():
-            # adding the email address - for now, assuming spearphish, therefore focusing on the <<from>> field
+        return True
+    elif 'x_mailer' in indicator.keys():
+        # adding the email address - for now, assuming spearphish, therefore focusing on the <<from>> field
+        with open(settings['filename']+'_mail.txt','a+') as bro_file:
             bro_file.write('\t'.join([indicator['from'],indicator_map['email'],get_sources(indicator),'T'])+'\n')
-            return True
-        else:
-            syslog.syslog('nyx->BRO: I do not know how to handle the following type of observable: %s' % indicator['type'])
-            return False
+        return True
+    else:
+        syslog.syslog('nyx->BRO: I do not know how to handle the following type of observable: %s' % indicator['type'])
+        return False
