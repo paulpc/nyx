@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-import pprint
 import json
 import requests
 import time
@@ -19,7 +18,6 @@ if __name__ == "__main__":
     # reading the settings - upon successful read, the functionality will be dependent on the sections in the configuration file
     settings=read_configs('nyx.conf')
     obs_index={'A':{'medium':[],'high':[]},'Address - ipv4-addr':{'medium':[],'high':[]},'md5':{'medium':[],'high':[]},'email':{'medium':[],'high':[]},'userid':{'medium':[],'high':[]}}
-    pp = pprint.PrettyPrinter(indent=4)
     
     intel={}        # validating that the sets in the configuration file are in QRadar
     if 'qradar' in settings.keys():
