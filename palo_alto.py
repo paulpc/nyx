@@ -141,9 +141,17 @@ def list_domains(settings):
         if result['response']['@status']=='success':
             for member in result['response']['result']['list']['member']:
                 if isinstance(member,dict):
-                    palo_url_index[member['#text']]=url_cat
+                    if member['#text'][0]=="*":
+                        palo_domain=member['#text'][2:]
+                    else:
+                        palo_domain=member['#text']
+                    palo_url_index[palo_domain]=url_cat
                 elif isinstance(member,unicode):
-                    palo_url_index[member]=url_cat
+                    if member[0]=="*":
+                        palo_domain=member[2:]
+                    else:
+                        palo_domain=member
+                    palo_url_index[palo_domain]=url_cat
     return palo_url_index
 
 def list_tags(settings):

@@ -49,12 +49,12 @@ def add_to_reference_set(qset, value, source, settings):
         return False
 def add_ip(ip,settings,intel_list,tags):
     """ adds an IP to the pre-established list. The tags might or might not be supported by the control"""
-    return qradar.add_to_reference_set(intel_list, ip, tags, settings)
+    return add_to_reference_set(intel_list, ip, tags, settings)
 
 
 def add_domain(domain,settings,intel_list,tags):
     """ adds an domain to the pre-established list. The tags might or might not be supported by the control"""
-    return qradar.add_to_reference_set(intel_list, domain, tags, settings)
+    return add_to_reference_set(intel_list, domain, tags, settings)
 
 def remove_from_reference_set(qset,value,settings):
     """ removes an indicator from the qset reference set """
