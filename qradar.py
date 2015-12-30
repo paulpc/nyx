@@ -3,7 +3,7 @@ import requests
 import json
 import syslog
 
-def qradar(indicator,settings, reference_sets):
+def add(indicator,settings, reference_sets):
     """ places the indicator in a reference set"""
     reference_set_map=settings[reference_sets]
     if 'type' in indicator.keys() and indicator['type']=='Address - ipv4-addr':
@@ -37,16 +37,24 @@ def qradar(indicator,settings, reference_sets):
 
 def add_to_reference_set(qset, value, source, settings):
     """ Adding the indicator (value) to the qset Reference Set, while maintaining the source"""
-    headers = {'Version': '2.0', 'Accept': 'application/json','SEC':settings['SEC']}
+    headers = {'Version': '4.0', 'Accept': 'application/json','SEC':settings['SEC']}
     parameters={'value':value, 'source':source}
     resp=requests.post(settings['base_url']+'reference_data/sets/'+qset,headers=headers,params=parameters,verify=False)
     # print parameters, resp.text
     if resp.status_code==200 or resp.status_code==201:
-        syslog.syslog(syslog.LOG_INFO,'nyx->QRadar: Added to %s to reference set: %s' % (value,qset))
+        syslog.syslog(syslog.LOG_INFO,'nyx->QRadar: successfully added to %s to reference set: %s' % (value,qset))
         return True
     else:
         syslog.syslog(syslog.LOG_ERR,str(resp.status_code)+'nyx->QRadar: Unable to add %s to reference set: %s' % (value,qset))
         return False
+def add_ip(ip,settings,intel_list,tags):
+    """ adds an IP to the pre-established list. The tags might or might not be supported by the control"""
+    return qradar.add_to_reference_set(intel_list, ip, tags, settings)
+
+
+def add_domain(domain,settings,intel_list,tags):
+    """ adds an domain to the pre-established list. The tags might or might not be supported by the control"""
+    return qradar.add_to_reference_set(intel_list, domain, tags, settings)
 
 def remove_from_reference_set(qset,value,settings):
     """ removes an indicator from the qset reference set """
@@ -61,7 +69,7 @@ def remove_from_reference_set(qset,value,settings):
     
 def list_reference_set(qset,settings):
     """ retrieves the elements of a reference set """
-    headers = {'Version': '2.0', 'Accept': 'application/json','SEC':settings['SEC']}
+    headers = {'Version': '4.0', 'Accept': 'application/json','SEC':settings['SEC']}
     params={'limit':0}
     # getting basic metadata
     res=requests.get(settings['base_url']+'reference_data/sets/'+qset,headers=headers,params=params,verify=False)
@@ -82,7 +90,22 @@ def list_reference_set(qset,settings):
     else:
         syslog.syslog(syslog.LOG_ERR,str(resp.status_code)+'nyx->QRadar: Unable to read reference set: %s' % qset)
         return []
-    
+
+def list_ips(settings):
+    """ getting a list of all the ips in the qradar intel-related reference sets"""
+    qradar_index={}
+    for ip_cat in settings['map']['ip'].values():
+        for q_ip in list_reference_set(ip_cat, settings):
+            qradar_index[q_ip['value']]=ip_cat
+    return qradar_index
+
+def list_domains(settings):
+    """ getting a list of domains from the qradar intel-related reference sets"""
+    qradar_index={}
+    for domain_cat in settings['map']['domain'].values():
+        for q_domain in list_reference_set(domain_cat, settings):
+            qradar_index[q_domain['value']]=domain_cat
+    return qradar_index
     
 def qradar_sets_cleanup(obs_index, settings):
     """ removes the outdated indicators from various sets """

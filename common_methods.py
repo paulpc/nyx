@@ -10,7 +10,7 @@ def get_sources(indicator):
             if not source in source_arr:
                 source_arr.append(source['name'])
     if source_arr:
-        return ','.join(source_arr)
+        return source_arr
     else:
         return "CRITs"
     
@@ -22,9 +22,9 @@ def get_intel_confidence(indicator):
     initial_score = {'low':30, 'medium':50, 'high':75}
     add_score={'low':5,'medium':10,'high':25}
     # setting the confidence to parrallel the highest-confidence source
-    processed_campaigns=[indicator['campaign'][0]['name']]
-    confidence=initial_score[indicator['campaign'][0]['confidence']]
-    for campaign in indicator['campaign']:
+    processed_campaigns=[indicator[u'campaign'][0]['name']]
+    confidence=initial_score[indicator[u'campaign'][0]['confidence']]
+    for campaign in indicator[u'campaign']:
         if not campaign['name'] in processed_campaigns:
             confidence+=add_score[campaign['confidence']]
             processed_campaigns.append(campaign['name'])
@@ -118,7 +118,7 @@ def read_configs(config_file):
     
     if config.has_section('qradar'):
         # getting the QRadar Settings
-        configs['qradar']={}
+        configs['qradar']={'map':{'ip':{'medium':'nyx_default_IP_medium','high':'nyx_default_IP_high'},'sample':{'medium':'nyx_default_sample_medium','high':'nyx_default_sample_high'},'email':{'medium':'nyx_default_email_medium','high':'nyx_default_email_high'},'domain':{'medium':'nyx_default_domain_medium','high':'nyx_default_domain_high'}}}
         if config.has_option('qradar','console'):
             configs['qradar']['base_url']=config.get('qradar','console')+'api/'
         else:
@@ -143,6 +143,10 @@ def read_configs(config_file):
         if config.has_option('qradar','high_reference_sets'):
             configs['qradar']['high_reference_sets']=json.loads(config.get('qradar','high_reference_sets'))
             set_test+=configs['qradar']['high_reference_sets'].values()
+            configs['qradar']['map']['ip']['high']=configs['qradar']['high_reference_sets']["Address - ipv4-addr"]
+            configs['qradar']['map']['domain']['high']=configs['qradar']['high_reference_sets']["A"]
+            configs['qradar']['map']['sample']['high']=configs['qradar']['high_reference_sets']["md5"]
+            configs['qradar']['map']['email']['high']=configs['qradar']['high_reference_sets']["email"]  
         else:
             syslog.syslog(syslog.LOG_ERR,'nyx: Unable to get the QRadar intel reference sets from the configuation file.')
             exit(-1)
@@ -150,6 +154,10 @@ def read_configs(config_file):
         if config.has_option('qradar','medium_reference_sets'):
             configs['qradar']['medium_reference_sets']=json.loads(config.get('qradar','medium_reference_sets'))
             set_test+=configs['qradar']['medium_reference_sets'].values()
+            configs['qradar']['map']['ip']['medium']=configs['qradar']['medium_reference_sets']["Address - ipv4-addr"]
+            configs['qradar']['map']['domain']['medium']=configs['qradar']['medium_reference_sets']["A"]
+            configs['qradar']['map']['sample']['medium']=configs['qradar']['medium_reference_sets']["md5"]
+            configs['qradar']['map']['email']['medium']=configs['qradar']['medium_reference_sets']["email"]  
         else:
             syslog.syslog(syslog.LOG_ERR,'nyx: Unable to get the QRadar intel reference sets from the configuation file.')
             exit(-1)        
@@ -159,8 +167,6 @@ def read_configs(config_file):
                 syslog.syslog(syslog.LOG_ERR,"nyx: Unable to find metadata about the (%s) set in the configuation file. Defaulting to ALNIC" % qset)
         
     if config.has_section('bro'):
-        set_test=[]
-
         #reading BRO settings
         configs['bro']={}
         if config.has_option('bro','filename'):
@@ -181,7 +187,7 @@ def read_configs(config_file):
     
     if config.has_section('palo_alto'):
         # reading palo alto settings
-        configs['palo_alto']={}
+        configs['palo_alto']={'map':{'ip':{'medium':'nyx_default_IP_medium','high':'nyx_default_IP_high'},'domain':{'medium':'nyx_default_domain_medium','high':'nyx_default_domain_high'}}}
         if config.has_option('palo_alto','api_key'):
             configs['palo_alto']['api_key']=config.get('palo_alto','api_key')
         else:
@@ -193,27 +199,27 @@ def read_configs(config_file):
         else:
             syslog.syslog(syslog.LOG_ERR,'nyx: Unable to get the Palo Alto base URL from the configuation file.')
             exit(-1)
-        
+        # this needs fixing to be more map-like: 
         if config.has_option('palo_alto','url_alert_list'):
-            configs['palo_alto']['url_alert_list']=config.get('palo_alto','url_alert_list')
+            configs['palo_alto']['map']['domain']['medium']=config.get('palo_alto','url_alert_list')
         else:
             syslog.syslog(syslog.LOG_ERR,'nyx: Unable to get the Palo Alto BlockList from the configuation file.')
             exit(-1)
             
         if config.has_option('palo_alto','url_block_list'):
-            configs['palo_alto']['url_block_list']=config.get('palo_alto','url_block_list')
+            configs['palo_alto']['map']['domain']['high']=config.get('palo_alto','url_block_list')
         else:
             syslog.syslog(syslog.LOG_ERR,'nyx: Unable to get the Palo Alto Alert List from the configuation file.')
             exit(-1)
             
         if config.has_option('palo_alto','ip_alert_list'):
-            configs['palo_alto']['ip_alert_list']=config.get('palo_alto','ip_alert_list')
+            configs['palo_alto']['map']['ip']['medium']=config.get('palo_alto','ip_alert_list')
         else:
             syslog.syslog(syslog.LOG_ERR,'nyx: Unable to get the Palo Alto BlockList from the configuation file.')
             exit(-1)
             
         if config.has_option('palo_alto','ip_block_list'):
-            configs['palo_alto']['ip_block_list']=config.get('palo_alto','ip_block_list')
+            configs['palo_alto']['map']['ip']['high']=config.get('palo_alto','ip_block_list')
         else:
             syslog.syslog(syslog.LOG_ERR,'nyx: Unable to get the Palo Alto Alert List from the configuation file.')
             exit(-1)
@@ -251,3 +257,24 @@ def read_configs(config_file):
                 wise_file.write()
     
     return configs
+
+def address_in_index(address,ip_index):
+    """checks to see if an address is in the index of IPs.
+    The index should be a key-value pair address|CIDR:address group|reference set"""
+    if address+"/32" in ip_index.keys():
+        return ip_index[address+"/32"]
+    elif address in ip_index.keys():
+        return ip_index[address]
+    else:
+        return False
+    
+def url_in_index(url,url_index):
+    """ checking url in url index
+    The index should be a key-value pair url:address group|reference set"""
+
+    if url in url_index.keys():
+        return url_index[url]
+    elif '*'+url in url_index.keys():
+        return url_index['*'+url]
+    else:
+        return False
